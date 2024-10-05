@@ -3,6 +3,7 @@ package org.example.Spring;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.HashMap;
@@ -56,9 +57,7 @@ public class ApplicationContext {
                             String scopedType = scoped.value();
 
                             BeanDefinition beanDefinition = new BeanDefinition(cs, scopedType);
-
                             beanDefinitionMap.put(beanName, beanDefinition);
-
                         }
                         else{
                             BeanDefinition beanDefinition = new BeanDefinition(cs, "singleton");
@@ -80,20 +79,56 @@ public class ApplicationContext {
 
                     }
                 }
-
                 //目录
-
             }
         }
         //判断注解获取扫描路径
-
     }
     public Object create(String beanName, BeanDefinition beanDefinition) {
-
         //根据反射创建bean对象
         try {
-            Constructor constructor = beanDefinition.getType().getConstructor();
+            Class objclass = beanDefinition.getType();
+            Constructor constructor = objclass.getConstructor();
             Object beanObject = constructor.newInstance();
+            //根据beanObject实现依赖注入
+            for (Field field : objclass.getFields()) {
+                if(beanDefinition.getValue().equals("singleton"))
+                {
+                    //判断是否有autowired注解
+                    if(field.isAnnotationPresent(Autowired.class)) {
+                        Autowired autowired = field.getAnnotation(Autowired.class);
+                        if(beanSigtonParasMap.containsKey(field.getName()))
+                        {
+                            field.setAccessible(true);
+                            field.set(beanObject,beanSigtonParasMap.get(field.getName()));
+                        }
+                        else{
+                            Object bean = create(field.getName(), beanDefinitionMap.get(field.getName()));
+                            field.setAccessible(true);
+                            field.set(beanObject,bean);
+                            beanSigtonParasMap.put(field.getName(),bean);
+                        }
+
+                    }
+                }
+                else {
+                    if (field.isAnnotationPresent(Autowired.class)) {
+                        field.setAccessible(true);
+                        Object bean = create(field.getName(), beanDefinitionMap.get(field.getName()));
+                        field.set(beanObject, bean);
+                    }
+
+                }
+
+            }
+
+            //实现araw回调给属性赋值
+
+
+
+
+
+
             return beanObject;
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
