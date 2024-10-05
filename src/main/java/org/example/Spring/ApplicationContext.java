@@ -2,10 +2,9 @@ package org.example.Spring;
 
 
 import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.*;
 import java.net.URL;
+import java.sql.SQLOutput;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,15 +120,37 @@ public class ApplicationContext {
                 }
 
             }
+            //实现araw回调给属性赋值,但是需要判断有没有该方法，所以使用接口
+            if(beanObject instanceof AwareBeanName)
+            {
+                //如果实现了AwareBeanName接口,则赋值
+                ((AwareBeanName)beanObject).setBeanName(beanName); //其实也可以转化为UserService类型，但是不具有通用型
 
-            //实现araw回调给属性赋值
+            }
+            if(beanObject instanceof  Aop)
+            {
+                //实现AOP
+                Object proxyInstance = Proxy.newProxyInstance(
+                        ApplicationContext.class.getClassLoader(),
+                        new Class[]{Aop.class},
+                        new InvocationHandler() {
+                            @Override
+                            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                                System.out.println("aop之前");
+                                method.invoke(beanObject,args);
+                                System.out.println("aop之后");
+                                return null;
+                            }
+                        }
+                );
+                //实现Aop的代理对象
+                return proxyInstance;
 
-
-
-
-
-
+            }
             return beanObject;
+
+
+
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         } catch (NoSuchMethodException e) {
