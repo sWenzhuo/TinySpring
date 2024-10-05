@@ -33,50 +33,47 @@ public class ApplicationContext {
             if(file.isDirectory())
             {
                 File[] files = file.listFiles();
-                for(File f : files)
-                {
+                for(File f : files) {
 
                     //根据反射获取对应的Class对象
 
-                    String absolutePath = f.getAbsolutePath().replace("\\",".");
-                    String className = absolutePath.substring(absolutePath.lastIndexOf("org"),absolutePath.lastIndexOf("."));
+                    String absolutePath = f.getAbsolutePath().replace("\\", ".");
+                    String className = absolutePath.substring(absolutePath.lastIndexOf("org"), absolutePath.lastIndexOf("."));
 
 
                     Class cs = Class.forName(className);
 
                     //如果有Component注解
-                    if(cs.isAnnotationPresent(Component.class)){
+                    if (cs.isAnnotationPresent(Component.class)) {
 
-                        Component component =(Component)cs.getAnnotation(Component.class);
+                        Component component = (Component) cs.getAnnotation(Component.class);
                         String beanName = component.value();
                         //判断单例和多例
-                        if(cs.isAnnotationPresent(Scoped.class))
-                        {
-                            Scoped scoped = (Scoped)cs.getAnnotation(Scoped.class);
+                        if (cs.isAnnotationPresent(Scoped.class)) {
+                            Scoped scoped = (Scoped) cs.getAnnotation(Scoped.class);
                             String scopedType = scoped.value();
 
                             BeanDefinition beanDefinition = new BeanDefinition(cs, scopedType);
                             beanDefinitionMap.put(beanName, beanDefinition);
-                        }
-                        else{
+                        } else {
                             BeanDefinition beanDefinition = new BeanDefinition(cs, "singleton");
-                            beanDefinitionMap.put(beanName,beanDefinition);
+                            beanDefinitionMap.put(beanName, beanDefinition);
                         }
                     }
-                    //处理beanDefinition
-                    for(String beanName : beanDefinitionMap.keySet())
+                }
+                //处理beanDefinition
+                for(String beanName : beanDefinitionMap.keySet())
+                {
+                    if(beanDefinitionMap.get(beanName).getValue().equals("singleton"))
                     {
-                        if(beanDefinitionMap.get(beanName).getValue().equals("singleton"))
+                        if(!beanSigtonParasMap.containsKey(beanName))
                         {
-                            if(!beanSigtonParasMap.containsKey(beanName))
-                            {
-                                Object obj=  this.create(beanName,  beanDefinitionMap.get(beanName));
-                                beanSigtonParasMap.put(beanName,obj);
-                            }
-
+                            Object obj=  this.create(beanName,  beanDefinitionMap.get(beanName));
+                            beanSigtonParasMap.put(beanName,obj);
                         }
 
                     }
+
                 }
                 //目录
             }
@@ -90,7 +87,7 @@ public class ApplicationContext {
             Constructor constructor = objclass.getConstructor();
             Object beanObject = constructor.newInstance();
             //根据beanObject实现依赖注入
-            for (Field field : objclass.getFields()) {
+            for (Field field : objclass.getDeclaredFields()) {
                 if(beanDefinition.getValue().equals("singleton"))
                 {
                     //判断是否有autowired注解
