@@ -25,7 +25,7 @@ public class CircleContext {
 
         if(this.config.isAnnotationPresent(ComponentScan.class))
         {
-            ComponentScan annotation = (ComponentScan) this.config.getAnnotation();
+            ComponentScan annotation = (ComponentScan) this.config.getAnnotation(ComponentScan.class);
             String path = annotation.value();
 
             path = path.replace(".","/");
@@ -46,7 +46,7 @@ public class CircleContext {
 
                     Class cs = Class.forName(className);
                     if (cs.isAnnotationPresent(Component.class)) {
-                        Component component =(Component) cs.getAnnotation();
+                        Component component =(Component) cs.getAnnotation(Component.class);
                         String beanName = component.value();
                         BeanDefinition beanDefinition = new BeanDefinition(cs, "singleton"); //默认是单例bean
                         beanDefinitionMap.put(beanName, beanDefinition);
@@ -69,8 +69,8 @@ public class CircleContext {
 
     public Object createBean(String beanName,BeanDefinition beanDefinition)
     {
-        Class cs = beanDefinition.getType();
         try {
+            Class cs = beanDefinition.getType();
             Constructor constructor=cs.getConstructor();
             Object bean = constructor.newInstance();
             //依赖注入,创建Aservice对象要依赖注入Bservice对象,但是目前单例池没有Bservice对象,创建Bservice对象的时候也需要Aservice对象，所以也不行。
@@ -85,7 +85,7 @@ public class CircleContext {
                     Autowired autowired = field.getAnnotation(Autowired.class);
                     if(!singletonObjects.containsKey(field.getName())) {
                         //递归创建
-                        createBean(beanName, beanDefinitionMap.get(beanName));
+                        createBean(field.getName(), beanDefinitionMap.get(field.getName()));
                     }
 
                 }
@@ -99,6 +99,8 @@ public class CircleContext {
                     field.set(bean, beanObj);
                 }
             }
+            return bean;
+
 
 
 
@@ -110,6 +112,24 @@ public class CircleContext {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Object getBean(String beanName) {
+        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        if (beanDefinition == null) {
+            throw new RuntimeException("没有找到 Bean: " + beanName);
+        }
+        if ("singleton".equals(beanDefinition.getValue())) {
+            Object beanObject = singletonObjects.get(beanName);
+            if (beanObject == null) {
+                throw new RuntimeException("没有找到单例Bean: " + beanName);
+            }
+            return beanObject;
+        } else if ("prototype".equals(beanDefinition.getValue())) {
+            return createBean(beanName,beanDefinition);
+        } else {
+            throw new RuntimeException("未知的 Bean 作用域: " + beanDefinition.getValue());
         }
     }
 

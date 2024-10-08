@@ -1,7 +1,10 @@
 package org.example.CircleService;
 
 import org.example.Spring.Autowired;
+import org.example.Spring.Component;
 
+
+@Component("c")
 public class C {
 
     @Autowired
@@ -11,5 +14,11 @@ public class C {
     private B b;
 
     @Autowired
-    private C d;
+    private D d;
+
+
+    public void  test()
+    {
+        this.d.test();
+    }
 }
