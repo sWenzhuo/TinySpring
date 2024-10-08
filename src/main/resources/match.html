@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匹配系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #3a3f51, #1f1f2e);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .matching-container {
+            width: 90%;
+            max-width: 600px;
+            background: #202b45;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        .matching-info {
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            background-color: #607d8b;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #78909c;
+        }
+    </style>
+</head>
+<body>
+<!-- 匹配系统容器 -->
+<div class="matching-container">
+    <h2>匹配系统</h2>
+    <p class="matching-info">找到与你相似或匹配的玩家！</p>
+    <div class="button-container">
+        <button onclick="startMatching()">开始匹配</button>
+        <button onclick="cancelMatching()">取消匹配</button>
+    </div>
+    <div id="matching-status" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+    let matchingInterval;
+
+    function startMatching() {
+        const status = document.getElementById('matching-status');
+        status.textContent = '匹配中，请稍候...';
+        matchingInterval = setInterval(() => {
+            const found = Math.random() > 0.7; // 随机匹配成功
+            if (found) {
+                clearInterval(matchingInterval);
+                status.textContent = '匹配成功！找到一个玩家与你匹配。';
+            }
+        }, 2000);
+    }
+
+    function cancelMatching() {
+        if (matchingInterval) {
+            clearInterval(matchingInterval);
+            const status = document.getElementById('matching-status');
+            status.textContent = '匹配已取消。';
+        }
+    }
+</script>
+</body>
+</html>
